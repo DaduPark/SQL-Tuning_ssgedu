@@ -99,7 +99,7 @@ AAAR3sAAEAAAACXAAK	7876	ADAMS
 AAAR3sAAEAAAACXAAL	7900	JAMES
 AAAR3sAAEAAAACXAAM	7902	FORD
 AAAR3sAAEAAAACXAAN	7934	MILLER
-
+```
 - 파일은 같다 : scott과 hr은 일반계정으로 데이터스페이스가 같으므로 저장되는 파일이 같고 다른 테이블이므로 OBject가 다르며 각 테이블 마다 동일한 페이지에 존재하므로 Block번호가 같으며 다른 ROW들이므로 위치번호가 모두 다르다
 
 ##  I/O 메커니즘
@@ -135,7 +135,7 @@ AAAR3sAAEAAAACXAAN	7934	MILLER
   - 여러 블록을 요청함으로써 프로세스의 대기 큐(wait queue)를 줄여 성능을 높일 수 있다
   - 여러 인스텐트에 존재하는 값을 가져오지못한다. 즉 한 인스텐트의 값을 가져옴
  
-### 1.3.7 Table Full Scan VS Index Range Scan
+### Table Full Scan VS Index Range Scan
 - Table Full Scan
    - 테이블 전체 스캔
    - 시퀀셜 액세스와 Multiblock I/O 사용
