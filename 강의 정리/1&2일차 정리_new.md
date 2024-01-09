@@ -201,51 +201,66 @@ AAAR3sAAEAAAACXAAN	7934	MILLER
 
 #### 1. heap과 B-트리 구조 인덱스 데이터 저장
 
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/4fcd5048-b1b4-4f50-b343-47da8be3b5c6" height="200"/>
+##### 1.1 heap
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/ea6c19ec-c64c-4a0c-b6c8-8f67504a87aa" height="200"/>
 
->  => 17개행을 넣는다 > 데이터페이지 5페이지가 필요(4페이지에 4개씩 + 1페이지에 데이터 1개)
->  => 값이 랜덤으로 들어가있을 때 (힙) > table full Scan(값을 찾을때 5페이지를 스캔해야함) 
+- 17개행을 넣는다 > 데이터페이지 5개의 페이지가 필요  
+-  => 값이 랜덤으로 들어가있을 때 (힙) > table full Scan(값을 찾을때 5페이지를 스캔해야함) 
 
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/01de69f0-b228-44fc-8de4-c742290ad8ff" height="200"/>
+##### 1.2 B-tree (name컬럼을 인덱스로 생성)
 
->  => 17행을 넣으므로 인덱스페이지(인덱스 기준 : name )는 Leaf 4개(3페이지에 5개씩 + 1페이지에 데이터 1개) + Branch, Root 7개 총 11페이지 필요
-> 인덱스를 4페이지(17개)에 name순서에 맞춰서 쓰며 rowId(파일명, 순번)으로 나타냄-> branch 2개의 페이지에 하단의 상의 name을 가지고 만듦 > root 1페이지에 branch 상위 name을 가지고 만듦
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/ae9ef640-3620-4075-b78d-8f1fc3f1f822" height="400"/>
+
+
+- 17행을 넣는다 > 인덱스페이지(인덱스 기준 : name)는 7개 + 기존 Heap 테이블 5개 = 총 11개 필요   
+- leaf는 인덱스를 name순서에 맞춰서 쓰며 rowId(파일명, 순번)으로 나타냄  
+- branch와 root는 하단 페이지의 상위 name을 기준으로 만듦  
 
 #### 2. Search (1. heap과 B-트리 구조 인덱스 데이터 저장 사진 참고)
 ##### 2.1. Full scan
+
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/dff3a43c-146c-4a61-9588-86acdf59b40a" height="200"/>  
+
+- where no = 10  
 -  no을 조건절에 건다면 인덱스(name)를 타지 않기 때문에 데이터페이지 5페이지를 찾게된다.
 
 ##### 2.2. Index scan
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/4c426074-16e7-4aba-adba-5b819d4f91e3" height="600"/>
+
+- where name = '차키'  
 -  name을 조건절에 건다면 인덱스를 타기 때문에 인덱스페이지 3페이지 + 데이터페이지 1페이지, 총 4페이지만 찾게된다.
 
 ##### 2.3. 옵티마이저에 의한 Full scan
-- (where name between '디비' and '종이')의 조건절을 건다면 12개(Root-branch-leaf 3페이지 + 수평적탐색 + 데이터페이지스캔)
-==> 옵티마이저가 인덱스 스캔이 많아질 경우에는 인덱스를 사용 안할 수 있다. 데이터페이지로만 확인함 (full 스캔)
+- where name between '디비' and '종이'  
+- 12개 (Root-branch-leaf 3페이지 + 수평적탐색 + 데이터페이지스캔)  
+- ==> 옵티마이저가 인덱스 스캔이 많아질 경우에는 인덱스를 사용 안할 수 있다. 데이터페이지로만 확인함 (full 스캔)
 
 
 #### 3. Insert('배달'데이터 추가)
 ##### 3.1. 데이터페이지 수정
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/70df7f43-ddd7-4178-b28e-900f5f2e9a88" height="200"/>  
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/53203c0a-a664-456c-942a-258142d20762" height="200"/>  
 
 - 데이터 추가 시 데이터페이지는 마지막에 추가하면 됨
 
 ##### 3.2. 인덱스 페이지 수정
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/a73a0ce2-6377-40a9-a113-8c6d7bdb94c0" height="200"/>  
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/3c403ac0-7df0-4d95-a129-1f9f0168af67" height="400"/>  
 
-- 인덱스페이지에는 leaf 레벨에 한장을 더 추가하여(페이지 스플릿_반띵) leaf(추가된 페이지과 기존 페이지를 순서에 맞게 주소값도 변경), branch등 많은 페이지들을 조정한다(페이지 추가 : 205, 페이지 수정 :202, 201)
-( 조회에서는 인덱스가 빠르지만 조작관점으로 보면 heap이 성능이 좋다. 그러므로 불필요한 인덱스 생성은 줄여야한다.)
+- 인덱스페이지에는 leaf 레벨에 한장을 더 추가하여(**페이지 스플릿**) leaf(추가된 페이지과 기존 페이지를 순서에 맞게 주소값도 변경), branch등 많은 페이지들을 조정한다
+- 페이지 추가 : 205, 페이지 수정 : 202, 201, 301
+-  조회에서는 인덱스가 빠르지만 조작관점으로 보면 heap이 성능이 좋다. 그러므로 **불필요한 인덱스 생성은 줄여야한다.**
 
 
 #### 4. Update ('모자'데이터를 '강자'데이터로 변경)
 ##### 4.1. 데이터페이지 수정
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/e21d318d-8b12-4ffe-ae84-5dbdbf026603" height="200"/>  
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/75040b6e-2779-4664-82c5-d8cf3cbf7405" height="200"/>  
 
 - 해당 데이터만 수정되면됨
   
 ##### 4.2. 인덱스 페이지 수정
-<img src="https://github.com/DaduPark/ReadingRecord/assets/76692927/a6663dfb-fd7d-49b0-ac12-7f00b72474d3" height="200"/>  
+<img src="https://github.com/DaduPark/SQL-Tuning_ssgedu/assets/76692927/1e730ef1-1fc5-49a5-928d-dfe0496ba8be" height="400"/>  
 
-- 201페이지는 페이지 스플릿처리되어 반으로 나뉘게 되고 순서에 맞게 '강자'데이터는 201로 감
-- 나머지 반은 206으로 변경
-- branch레벨인 301에 206의 가장 상위 데이터가 셋팅됨
-- 202에 '모자'데이터 삭제
+- 201페이지는 페이지 스플릿처리되어 반으로 나뉘게 되고 순서에 맞게 '강자'데이터는 201로 감  
+- 나머지 반은 206으로 변경  
+- branch레벨인 301에 206의 가장 상위 데이터가 셋팅됨  
+- 202에 '모자'데이터 삭제  
+- **불필요한 인덱스 생성은 줄여야한다.**
